@@ -1,17 +1,24 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import ThreadList from '@/components/ThreadList';
 import ChatArea from '@/components/ChatArea';
 import { Thread, Message } from '@/types/chat';
 import { getThreads, getMessages, sendMessage } from '@/services/chatApi';
 
 export default function Home() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  
   const [threads, setThreads] = useState<Thread[]>([]);
-  const [selectedThreadId, setSelectedThreadId] = useState<number | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [threadsLoading, setThreadsLoading] = useState(true);
+  
+  // Get thread ID from URL
+  const threadParam = searchParams.get('thread');
+  const selectedThreadId = threadParam ? parseInt(threadParam) : null;
 
   useEffect(() => {
     loadThreads();
@@ -19,11 +26,19 @@ export default function Home() {
 
   useEffect(() => {
     if (selectedThreadId) {
-      loadMessages(selectedThreadId);
+      // Validate that the thread exists in our loaded threads
+      const threadExists = threads.length > 0 && threads.some(thread => thread.id === selectedThreadId);
+      if (threadExists) {
+        loadMessages(selectedThreadId);
+      } else if (threads.length > 0) {
+        // Thread doesn't exist, redirect to home
+        router.push('/');
+      }
+      // If threads haven't loaded yet, wait for them to load first
     } else {
       setMessages([]);
     }
-  }, [selectedThreadId]);
+  }, [selectedThreadId, threads, router]);
 
   const loadThreads = async () => {
     try {
@@ -50,11 +65,11 @@ export default function Home() {
   };
 
   const handleSelectThread = (threadId: number) => {
-    setSelectedThreadId(threadId);
+    router.push(`/?thread=${threadId}`);
   };
 
   const handleNewChat = () => {
-    setSelectedThreadId(null);
+    router.push('/');
     setMessages([]);
   };
 
@@ -63,10 +78,10 @@ export default function Home() {
     try {
       const result = await sendMessage(selectedThreadId, content);
       
-      // If this was a new chat, update the threads list and select the new thread
+      // If this was a new chat, update the threads list and navigate to new thread
       if (selectedThreadId === null) {
         await loadThreads();
-        setSelectedThreadId(result.thread.id);
+        router.push(`/?thread=${result.thread.id}`);
       } else {
         // Reload messages for the current thread
         await loadMessages(selectedThreadId);

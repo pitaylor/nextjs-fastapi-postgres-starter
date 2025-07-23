@@ -9,11 +9,11 @@ import LoadingSpinner from '@/components/ui/LoadingSpinner';
 interface ChatAreaProps {
   messages: MessageType[];
   selectedThreadId: number | null;
-  onSendMessage: (content: string) => void;
   isLoading: boolean;
+  onSendMessage: (content: string) => void;
 }
 
-export default function ChatArea({ messages, selectedThreadId, onSendMessage, isLoading }: ChatAreaProps) {
+export default function ChatArea({ messages, selectedThreadId, isLoading, onSendMessage }: ChatAreaProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -26,22 +26,20 @@ export default function ChatArea({ messages, selectedThreadId, onSendMessage, is
 
   return (
     <div className="flex-1 flex flex-col h-screen bg-gray-800">
-      {/* Messages Area */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.length === 0 && selectedThreadId === null ? (
+        {selectedThreadId === null && (
           <div className="flex items-center justify-center h-full text-gray-400">
             <div className="text-center">
               <h2 className="text-2xl font-semibold mb-2 text-white">Welcome to ChatBot</h2>
               <p>Start a conversation by typing a message below.</p>
             </div>
           </div>
-        ) : messages.length === 0 && selectedThreadId !== null && isLoading ? (
-          <LoadingSpinner text="Loading messages..." centered />
-        ) : (
-          messages.map((message) => (
-            <Message key={message.id} message={message} />
-          ))
         )}
+        
+        {messages.map((message) => (
+          <Message key={message.id} message={message} />
+        ))}
+
         {isLoading && messages.length > 0 && (
           <div className="flex justify-start">
             <div className="max-w-3xl px-4 py-2 rounded-lg bg-gray-700 text-gray-100">

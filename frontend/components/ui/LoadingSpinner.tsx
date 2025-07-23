@@ -2,14 +2,12 @@
 
 interface LoadingSpinnerProps {
   size?: 'small' | 'medium' | 'large';
-  text?: string;
   centered?: boolean;
   className?: string;
 }
 
 export default function LoadingSpinner({ 
   size = 'medium', 
-  text, 
   centered = false,
   className = ''
 }: LoadingSpinnerProps) {
@@ -25,13 +23,12 @@ export default function LoadingSpinner({
 
   return (
     <div className={`${containerClasses} ${className}`}>
-      <div className={`flex items-center ${text ? 'space-x-2' : ''} text-gray-400`}>
+      <div className={`flex items-center text-gray-400`}>
         <div className="flex items-center space-x-1">
           <div className={`${sizeClasses[size]} bg-gray-400 rounded-full animate-bounce`}></div>
           <div className={`${sizeClasses[size]} bg-gray-400 rounded-full animate-bounce`} style={{ animationDelay: '0.1s' }}></div>
           <div className={`${sizeClasses[size]} bg-gray-400 rounded-full animate-bounce`} style={{ animationDelay: '0.2s' }}></div>
         </div>
-        {text && <span className="ml-2">{text}</span>}
       </div>
     </div>
   );

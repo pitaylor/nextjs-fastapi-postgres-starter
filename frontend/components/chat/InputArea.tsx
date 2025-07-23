@@ -3,11 +3,11 @@
 import { useRef, useState } from 'react';
 
 interface InputAreaProps {
-  onSendMessage: (content: string) => void;
   isLoading: boolean;
+  onSendMessage: (content: string) => void;
 }
 
-export default function InputArea({ onSendMessage, isLoading }: InputAreaProps) {
+export default function InputArea({ isLoading, onSendMessage }: InputAreaProps) {
   const [input, setInput] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -16,6 +16,8 @@ export default function InputArea({ onSendMessage, isLoading }: InputAreaProps) 
     if (input.trim() && !isLoading) {
       onSendMessage(input.trim());
       setInput('');
+
+      // Refocus the input to make it easier to type the next message
       setTimeout(() => {
         inputRef.current?.focus();
       }, 100);

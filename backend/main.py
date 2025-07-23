@@ -2,11 +2,9 @@ from typing import List
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db_engine import engine
-from models import Message, MessageRole, Thread, User
 from schemas import MessageCreate, MessageRead, SendMessageResponse, ThreadRead, UserRead
 from services.message_service import MessageService
 from services.thread_service import ThreadService
@@ -76,22 +74,14 @@ async def send_message(message_data: MessageCreate, thread_id: int | None = None
             if user is None:
                 raise HTTPException(status_code=404, detail="User not found")
 
-            # If no thread_id provided, create a new thread
-            if thread_id is None:
-                thread_name = message_data.content[:30] + ("..." if len(message_data.content) > 30 else "")
-                thread = await ThreadService.create_thread(session, user, thread_name)
-            else:
-                thread = await ThreadService.get_thread_by_id(session, thread_id)
-                if thread is None:
-                    raise HTTPException(status_code=404, detail="Thread not found")
+            # Get existing thread or create new one
+            thread = await ThreadService.get_or_create_thread(session, user, thread_id, message_data.content)
+            if thread is None:
+                raise HTTPException(status_code=404, detail="Thread not found")
 
-            # Create user message
-            await MessageService.create_message(session, thread.id, message_data.content, MessageRole.USER)
-
-            # Create mock assistant response
-            assistant_content = MessageService.generate_mock_assistant_response(message_data.content)
-            assistant_message = await MessageService.create_message(
-                session, thread.id, assistant_content, MessageRole.ASSISTANT
+            # Create user and assistant messages for the interaction
+            _, assistant_message = await MessageService.create_messages_for_interaction(
+                session, thread.id, message_data.content
             )
 
             response = SendMessageResponse(

@@ -23,3 +23,17 @@ class MessageService:
     @staticmethod
     def generate_mock_assistant_response(user_content: str) -> str:
         return f'I understand you\'re asking about: "{user_content}". This is a response from the assistant.'
+
+    @classmethod
+    async def create_messages_for_interaction(
+        cls: "MessageService", session: AsyncSession, thread_id: int, user_content: str
+    ) -> Tuple[Message, Message]:
+        """Create both user and assistant messages for a complete interaction."""
+        user_message = await MessageService.create_message(session, thread_id, user_content, MessageRole.USER)
+
+        assistant_content = MessageService.generate_mock_assistant_response(user_content)
+        assistant_message = await MessageService.create_message(
+            session, thread_id, assistant_content, MessageRole.ASSISTANT
+        )
+
+        return user_message, assistant_message

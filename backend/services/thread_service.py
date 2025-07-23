@@ -23,3 +23,17 @@ class ThreadService:
         session.add(thread)
         await session.flush()  # Get the thread ID
         return thread
+
+    @classmethod
+    async def get_or_create_thread(
+        cls: "ThreadService", session: AsyncSession, user: User, thread_id: int | None, content: str
+    ) -> Thread | None:
+        """
+        Get existing thread by ID, or create a new one if thread_id is None.
+        Returns None if thread_id is provided and thread is not found.
+        """
+        if thread_id is None:
+            thread_name = content[:30] + ("..." if len(content) > 30 else "")
+            return await cls.create_thread(session, user, thread_name)
+        else:
+            return await cls.get_thread_by_id(session, thread_id)

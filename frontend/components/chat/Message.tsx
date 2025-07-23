@@ -24,7 +24,12 @@ export default function Message({ message }: MessageProps) {
             message.role === MessageRole.USER ? 'text-blue-200' : 'text-gray-400'
           }`}
         >
-          {new Date(message.sent_at).toLocaleTimeString()}
+          {new Date(message.sent_at + 'Z').toLocaleString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+            month: 'short',
+            day: 'numeric'
+          })}
         </div>
       </div>
     </div>

@@ -1,17 +1,14 @@
-from datetime import datetime
 from typing import List
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db_engine import engine
 from models import Message, MessageRole, Thread, User
+from schemas import MessageCreate, MessageRead, SendMessageResponse, ThreadRead, UserRead
 from seed import seed_thread_if_needed, seed_user_if_needed
-
-# TODO: refactor into separate files (if it makes sense)
 
 seed_user_if_needed()
 seed_thread_if_needed()
@@ -25,34 +22,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
-class UserRead(BaseModel):
-    id: int
-    name: str
-
-
-class ThreadRead(BaseModel):
-    id: int
-    user_id: int
-    name: str
-
-
-class MessageRead(BaseModel):
-    id: int
-    thread_id: int
-    content: str
-    role: MessageRole
-    sent_at: datetime
-
-
-class MessageCreate(BaseModel):
-    content: str
-
-
-class SendMessageResponse(BaseModel):
-    thread: ThreadRead
-    message: MessageRead
 
 
 @app.get("/users/me")

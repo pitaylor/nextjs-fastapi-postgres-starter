@@ -4,6 +4,7 @@ import { useRef, useEffect } from 'react';
 import { Message as MessageType } from '@/types/chat';
 import Message from './Message';
 import InputArea from './InputArea';
+import LoadingSpinner from './LoadingSpinner';
 
 interface ChatAreaProps {
   messages: MessageType[];
@@ -34,19 +35,17 @@ export default function ChatArea({ messages, selectedThreadId, onSendMessage, is
               <p>Start a conversation by typing a message below.</p>
             </div>
           </div>
+        ) : messages.length === 0 && selectedThreadId !== null && isLoading ? (
+          <LoadingSpinner text="Loading messages..." centered />
         ) : (
           messages.map((message) => (
             <Message key={message.id} message={message} />
           ))
         )}
-        {isLoading && (
+        {isLoading && messages.length > 0 && (
           <div className="flex justify-start">
             <div className="max-w-3xl px-4 py-2 rounded-lg bg-gray-700 text-gray-100">
-              <div className="flex items-center space-x-1">
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-              </div>
+              <LoadingSpinner size="small" />
             </div>
           </div>
         )}

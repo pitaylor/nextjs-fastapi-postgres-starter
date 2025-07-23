@@ -11,6 +11,7 @@ export default function Home() {
   const [selectedThreadId, setSelectedThreadId] = useState<number | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [threadsLoading, setThreadsLoading] = useState(true);
 
   useEffect(() => {
     loadThreads();
@@ -26,19 +27,25 @@ export default function Home() {
 
   const loadThreads = async () => {
     try {
+      setThreadsLoading(true);
       const fetchedThreads = await getThreads();
       setThreads(fetchedThreads);
     } catch (error) {
       console.error('Failed to load threads:', error);
+    } finally {
+      setThreadsLoading(false);
     }
   };
 
   const loadMessages = async (threadId: number) => {
     try {
+      setIsLoading(true);
       const fetchedMessages = await getMessages(threadId);
       setMessages(fetchedMessages);
     } catch (error) {
       console.error('Failed to load messages:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -78,6 +85,7 @@ export default function Home() {
         selectedThreadId={selectedThreadId}
         onSelectThread={handleSelectThread}
         onNewChat={handleNewChat}
+        isLoading={threadsLoading}
       />
       <ChatArea
         messages={messages}

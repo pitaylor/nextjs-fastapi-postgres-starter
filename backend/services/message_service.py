@@ -9,7 +9,8 @@ from models import Message, MessageRole
 class MessageService:
     @staticmethod
     async def get_messages_by_thread_id(session: AsyncSession, thread_id: int) -> List[Message]:
-        result = await session.execute(select(Message).where(Message.thread_id == thread_id))
+        # Order by ID which reflects insertion order
+        result = await session.execute(select(Message).where(Message.thread_id == thread_id).order_by(Message.id))
         return list(result.scalars().all())
 
     @staticmethod

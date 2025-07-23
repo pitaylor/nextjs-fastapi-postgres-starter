@@ -9,7 +9,8 @@ from models import Thread, User
 class ThreadService:
     @staticmethod
     async def get_all_threads(session: AsyncSession) -> List[Thread]:
-        result = await session.execute(select(Thread))
+        # Order by ID which reflects insertion order
+        result = await session.execute(select(Thread).order_by(Thread.id))
         return list(result.scalars().all())
 
     @staticmethod

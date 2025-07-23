@@ -1,7 +1,7 @@
 from datetime import datetime
 from enum import Enum as PyEnum
 
-from sqlalchemy import DateTime, Enum, ForeignKey, String, Text
+from sqlalchemy import DateTime, Enum, ForeignKey, Index, String, Text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
@@ -29,7 +29,7 @@ class Thread(Base):
     __tablename__ = "thread"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
+    user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), index=True)
     name: Mapped[str] = mapped_column(String(255))
 
     user: Mapped["User"] = relationship("User")
@@ -40,9 +40,10 @@ class Thread(Base):
 
 class Message(Base):
     __tablename__ = "message"
+    __table_args__ = (Index("ix_message_thread_id_id", "thread_id", "id"),)
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    thread_id: Mapped[int] = mapped_column(ForeignKey("thread.id"))
+    thread_id: Mapped[int] = mapped_column(ForeignKey("thread.id"), index=True)
     role: Mapped[MessageRole] = mapped_column(Enum(MessageRole))
     content: Mapped[str] = mapped_column(Text)
     sent_at: Mapped[datetime] = mapped_column(DateTime, default=func.now())

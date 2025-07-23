@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 interface InputAreaProps {
   onSendMessage: (content: string) => void;
@@ -9,12 +9,16 @@ interface InputAreaProps {
 
 export default function InputArea({ onSendMessage, isLoading }: InputAreaProps) {
   const [input, setInput] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (input.trim() && !isLoading) {
       onSendMessage(input.trim());
       setInput('');
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 100);
     }
   };
 
@@ -22,6 +26,7 @@ export default function InputArea({ onSendMessage, isLoading }: InputAreaProps) 
     <div className="border-t border-gray-700 p-4">
       <form onSubmit={handleSubmit} className="flex space-x-4">
         <input
+          ref={inputRef}
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}

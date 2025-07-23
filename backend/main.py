@@ -1,12 +1,13 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from sqlalchemy import select
-from seed import seed_user_if_needed
+from seed import seed_user_if_needed, seed_thread_if_needed
 from sqlalchemy.ext.asyncio import AsyncSession
 from db_engine import engine
 from models import User
 
 seed_user_if_needed()
+seed_thread_if_needed()
 
 app = FastAPI()
 

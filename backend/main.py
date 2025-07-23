@@ -1,12 +1,15 @@
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
-from sqlalchemy import select
-from seed import seed_user_if_needed, seed_thread_if_needed
-from sqlalchemy.ext.asyncio import AsyncSession
-from db_engine import engine
-from models import User, Thread, Message, MessageRole
 from datetime import datetime
 from typing import List
+
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from db_engine import engine
+from models import Message, MessageRole, Thread, User
+from seed import seed_thread_if_needed, seed_user_if_needed
 
 # TODO: refactor into separate files (if it makes sense)
 
@@ -14,6 +17,14 @@ seed_user_if_needed()
 seed_thread_if_needed()
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 class UserRead(BaseModel):
@@ -144,9 +155,8 @@ async def send_message(message_data: MessageCreate, thread_id: int | None = None
             )
             session.add(assistant_message)
             await session.flush()
-            await session.commit()
 
-            return SendMessageResponse(
+            response = SendMessageResponse(
                 thread=ThreadRead(
                     id=thread.id, user_id=thread.user_id, name=thread.name
                 ),
@@ -158,3 +168,7 @@ async def send_message(message_data: MessageCreate, thread_id: int | None = None
                     sent_at=assistant_message.sent_at,
                 ),
             )
+
+            await session.commit()
+
+            return response

@@ -31,9 +31,5 @@ def seed_thread_if_needed():
             thread = Thread(user_id=user.id, name="Sample Chat")
             session.add(thread)
             session.flush()
-            session.add(
-                Message(
-                    thread_id=thread.id, role=MessageRole.ASSISTANT, content="Hi there?"
-                )
-            )
+            session.add(Message(thread_id=thread.id, role=MessageRole.ASSISTANT, content="Hi there?"))
             session.commit()

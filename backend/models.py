@@ -1,9 +1,9 @@
-from sqlalchemy import String, Text, DateTime, ForeignKey, Enum
-from sqlalchemy.orm import DeclarativeBase, relationship
-from sqlalchemy.orm import Mapped
-from sqlalchemy.orm import mapped_column
 from datetime import datetime
 from enum import Enum as PyEnum
+
+from sqlalchemy import DateTime, Enum, ForeignKey, String, Text
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from sqlalchemy.sql import func
 
 
 class MessageRole(str, PyEnum):
@@ -45,9 +45,7 @@ class Message(Base):
     thread_id: Mapped[int] = mapped_column(ForeignKey("thread.id"))
     role: Mapped[MessageRole] = mapped_column(Enum(MessageRole))
     content: Mapped[str] = mapped_column(Text)
-
-    # todo: fix this deprecation warning
-    sent_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    sent_at: Mapped[datetime] = mapped_column(DateTime, default=func.now())
 
     thread: Mapped["Thread"] = relationship("Thread")
 

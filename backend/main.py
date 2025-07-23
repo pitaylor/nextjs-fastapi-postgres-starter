@@ -74,10 +74,7 @@ async def get_threads():
         async with session.begin():
             result = await session.execute(select(Thread))
             threads = result.scalars().all()
-            return [
-                ThreadRead(id=thread.id, user_id=thread.user_id, name=thread.name)
-                for thread in threads
-            ]
+            return [ThreadRead(id=thread.id, user_id=thread.user_id, name=thread.name) for thread in threads]
 
 
 @app.get("/threads/{thread_id}/messages", response_model=List[MessageRead])
@@ -85,17 +82,13 @@ async def get_messages(thread_id: int):
     async with AsyncSession(engine) as session:
         async with session.begin():
             # Check if thread exists
-            thread_result = await session.execute(
-                select(Thread).where(Thread.id == thread_id)
-            )
+            thread_result = await session.execute(select(Thread).where(Thread.id == thread_id))
             thread = thread_result.scalar_one_or_none()
             if thread is None:
                 raise HTTPException(status_code=404, detail="Thread not found")
 
             # Get messages for the thread
-            result = await session.execute(
-                select(Message).where(Message.thread_id == thread_id)
-            )
+            result = await session.execute(select(Message).where(Message.thread_id == thread_id))
             messages = result.scalars().all()
             return [
                 MessageRead(
@@ -120,46 +113,36 @@ async def send_message(message_data: MessageCreate, thread_id: int | None = None
 
             # If no thread_id provided, create a new thread
             if thread_id is None:
-                thread_name = message_data.content[:30] + (
-                    "..." if len(message_data.content) > 30 else ""
-                )
+                thread_name = message_data.content[:30] + ("..." if len(message_data.content) > 30 else "")
                 new_thread = Thread(user_id=user.id, name=thread_name)
                 session.add(new_thread)
                 await session.flush()  # Get the thread ID
                 thread = new_thread
             else:
-                thread_result = await session.execute(
-                    select(Thread).where(Thread.id == thread_id)
-                )
+                thread_result = await session.execute(select(Thread).where(Thread.id == thread_id))
                 thread = thread_result.scalar_one_or_none()
                 if thread is None:
                     raise HTTPException(status_code=404, detail="Thread not found")
 
             # Create user message
-            user_message = Message(
-                thread_id=thread.id,
-                content=message_data.content,
-                role=MessageRole.USER,
-                sent_at=datetime.utcnow(),
-            )
+            user_message = Message(thread_id=thread.id, content=message_data.content, role=MessageRole.USER)
             session.add(user_message)
             await session.flush()
 
             # Create mock assistant response
-            assistant_content = f'I understand you\'re asking about: "{message_data.content}". This is a response from the assistant.'
+            assistant_content = (
+                f'I understand you\'re asking about: "{message_data.content}". This is a response from the assistant.'
+            )
             assistant_message = Message(
                 thread_id=thread.id,
                 content=assistant_content,
                 role=MessageRole.ASSISTANT,
-                sent_at=datetime.utcnow(),  # TODO: fix deprecation warning
             )
             session.add(assistant_message)
             await session.flush()
 
             response = SendMessageResponse(
-                thread=ThreadRead(
-                    id=thread.id, user_id=thread.user_id, name=thread.name
-                ),
+                thread=ThreadRead(id=thread.id, user_id=thread.user_id, name=thread.name),
                 message=MessageRead(
                     id=assistant_message.id,
                     thread_id=assistant_message.thread_id,

@@ -18,7 +18,7 @@ def seed_user_if_needed():
 def seed_thread_if_needed():
     with Session(sync_engine) as session:
         with session.begin():
-            if session.execute(select(Thread)).scalar_one_or_none() is not None:
+            if session.execute(select(Thread)).scalars().first() is not None:
                 print("Thread already exists, skipping seeding")
                 return
 

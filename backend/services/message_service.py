@@ -3,8 +3,7 @@ from typing import List, Tuple
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from models import Message, MessageRole, Thread
-from services.user_service import UserService
+from models import Message, MessageRole
 
 
 class MessageService:

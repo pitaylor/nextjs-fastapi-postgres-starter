@@ -8,6 +8,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from db_engine import engine
 from models import Message, MessageRole, Thread, User
 from schemas import MessageCreate, MessageRead, SendMessageResponse, ThreadRead, UserRead
+from services.message_service import MessageService
+from services.thread_service import ThreadService
+from services.user_service import UserService
 from seed import seed_thread_if_needed, seed_user_if_needed
 
 seed_user_if_needed()
@@ -28,10 +31,7 @@ app.add_middleware(
 async def get_my_user():
     async with AsyncSession(engine) as session:
         async with session.begin():
-            # Sample logic to simplify getting the current user. There's only one user.
-            result = await session.execute(select(User))
-            user = result.scalars().first()
-
+            user = await UserService.get_current_user(session)
             if user is None:
                 raise HTTPException(status_code=404, detail="User not found")
             return UserRead(id=user.id, name=user.name)
@@ -41,8 +41,7 @@ async def get_my_user():
 async def get_threads():
     async with AsyncSession(engine) as session:
         async with session.begin():
-            result = await session.execute(select(Thread))
-            threads = result.scalars().all()
+            threads = await ThreadService.get_all_threads(session)
             return [ThreadRead(id=thread.id, user_id=thread.user_id, name=thread.name) for thread in threads]
 
 
@@ -51,14 +50,12 @@ async def get_messages(thread_id: int):
     async with AsyncSession(engine) as session:
         async with session.begin():
             # Check if thread exists
-            thread_result = await session.execute(select(Thread).where(Thread.id == thread_id))
-            thread = thread_result.scalar_one_or_none()
+            thread = await ThreadService.get_thread_by_id(session, thread_id)
             if thread is None:
                 raise HTTPException(status_code=404, detail="Thread not found")
 
             # Get messages for the thread
-            result = await session.execute(select(Message).where(Message.thread_id == thread_id))
-            messages = result.scalars().all()
+            messages = await MessageService.get_messages_by_thread_id(session, thread_id)
             return [
                 MessageRead(
                     id=message.id,
@@ -75,40 +72,27 @@ async def get_messages(thread_id: int):
 async def send_message(message_data: MessageCreate, thread_id: int | None = None):
     async with AsyncSession(engine) as session:
         async with session.begin():
-            user_result = await session.execute(select(User))
-            user = user_result.scalar_one_or_none()
+            user = await UserService.get_current_user(session)
             if user is None:
                 raise HTTPException(status_code=404, detail="User not found")
 
             # If no thread_id provided, create a new thread
             if thread_id is None:
                 thread_name = message_data.content[:30] + ("..." if len(message_data.content) > 30 else "")
-                new_thread = Thread(user_id=user.id, name=thread_name)
-                session.add(new_thread)
-                await session.flush()  # Get the thread ID
-                thread = new_thread
+                thread = await ThreadService.create_thread(session, user, thread_name)
             else:
-                thread_result = await session.execute(select(Thread).where(Thread.id == thread_id))
-                thread = thread_result.scalar_one_or_none()
+                thread = await ThreadService.get_thread_by_id(session, thread_id)
                 if thread is None:
                     raise HTTPException(status_code=404, detail="Thread not found")
 
             # Create user message
-            user_message = Message(thread_id=thread.id, content=message_data.content, role=MessageRole.USER)
-            session.add(user_message)
-            await session.flush()
+            await MessageService.create_message(session, thread.id, message_data.content, MessageRole.USER)
 
             # Create mock assistant response
-            assistant_content = (
-                f'I understand you\'re asking about: "{message_data.content}". This is a response from the assistant.'
+            assistant_content = MessageService.generate_mock_assistant_response(message_data.content)
+            assistant_message = await MessageService.create_message(
+                session, thread.id, assistant_content, MessageRole.ASSISTANT
             )
-            assistant_message = Message(
-                thread_id=thread.id,
-                content=assistant_content,
-                role=MessageRole.ASSISTANT,
-            )
-            session.add(assistant_message)
-            await session.flush()
 
             response = SendMessageResponse(
                 thread=ThreadRead(id=thread.id, user_id=thread.user_id, name=thread.name),

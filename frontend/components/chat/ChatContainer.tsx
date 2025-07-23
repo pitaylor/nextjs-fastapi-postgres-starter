@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import ThreadList from '@/components/ThreadList';
-import ChatArea from '@/components/ChatArea';
+import ThreadList from './ThreadList';
+import ChatArea from './ChatArea';
 import { Thread, Message } from '@/types/chat';
 import { getThreads, getMessages, sendMessage } from '@/services/chatApi';
 

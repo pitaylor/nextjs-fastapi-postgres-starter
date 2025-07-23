@@ -1,7 +1,7 @@
 'use client';
 
 import { Thread } from '@/types/chat';
-import LoadingSpinner from './LoadingSpinner';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 interface ThreadListProps {
   threads: Thread[];

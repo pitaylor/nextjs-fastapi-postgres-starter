@@ -4,7 +4,7 @@ import { useRef, useEffect } from 'react';
 import { Message as MessageType } from '@/types/chat';
 import Message from './Message';
 import InputArea from './InputArea';
-import LoadingSpinner from './LoadingSpinner';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 interface ChatAreaProps {
   messages: MessageType[];

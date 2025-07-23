@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import ChatContainer from '@/components/ChatContainer';
+import ChatContainer from '@/components/chat/ChatContainer';
 
 export default function Home() {
   const router = useRouter();
